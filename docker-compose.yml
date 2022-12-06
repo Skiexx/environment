@@ -1,0 +1,76 @@
+version: '3'
+
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  service:
+    driver: bridge
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: .deploy/Dockerfile
+#      args:
+    container_name: ${USER:-www}-nginx
+    image: ${USER:-www}/nginx
+    depends_on:
+      - backend
+      - frontend
+      - adminer
+#    environment:
+    ports:
+      - "80:80"
+    networks:
+      - service
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: .deploy/Dockerfile
+#      args:
+    container_name: ${USER:-www}-php
+    image: ${USER:-www}/php
+    depends_on:
+      - db
+#    environment:
+    networks:
+      - service
+
+  db:
+    image: postgres:15-alpine3.17
+    container_name: ${USER:-www}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-laravel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-QWEasd123@}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+    volumes:
+      - dbdata:/var/lib/postgres
+    networks:
+      - service
+
+  db-test:
+    image: postgres:15-alpine3.17
+    environment:
+      POSTGRES_PASSWORD: QWEasd123@
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    container_name: ${USER:-www}
+    networks:
+      - service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: .deploy/Dockerfile
+#      args:
+    container_name: ${USER:-www}
+    restart: unless-stopped
+    networks:
+      - service
+
