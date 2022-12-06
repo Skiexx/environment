@@ -13,7 +13,8 @@ RUN npm install --force
 COPY . .
 
 # Expose port 3000
-EXPOSE 3000
+ARG FRONTEND_PORT
+EXPOSE $FRONTEND_PORT
 
 # Start app
 CMD [ "npm", "run", "serve" ]

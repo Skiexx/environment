@@ -24,7 +24,8 @@ COPY --from=build-stage /app/build/ /usr/share/app/html
 WORKDIR /usr/share/app/html
 
 # Expose port 3000
-EXPOSE 3000
+ARG FRONTEND_PORT
+EXPOSE $FRONTEND_PORT
 
 # Start app
 CMD [ "npm" , "run" , "serve" ]

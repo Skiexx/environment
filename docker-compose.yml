@@ -68,6 +68,8 @@ services:
     build:
       context: ./frontend
       dockerfile: .deploy/dev.Dockerfile
+      args:
+        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
     image: ${USER:-www}/frontend
     container_name: ${USER:-www}-frontend
     environment:
