@@ -36,6 +36,8 @@ services:
     depends_on:
       - db
 #    environment:
+    volumes:
+      - ./backend:/var/www
     networks:
       - service
 
