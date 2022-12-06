@@ -20,10 +20,11 @@ FROM nginx:1.19-alpine
 RUN apk add npm
 
 # Copy app source code
-COPY --from=build-stage /app/build/ /usr/share/nginx/html
+COPY --from=build-stage /app/build/ /usr/share/app/html
+WORKDIR /usr/share/app/html
 
 # Expose port 3000
 EXPOSE 3000
 
 # Start app
-CMD [ "npm" , "run" , "start" ]
+CMD [ "npm" , "run" , "serve" ]

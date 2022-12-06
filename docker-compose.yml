@@ -67,9 +67,13 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: .deploy/Dockerfile
-#      args:
-    container_name: ${USER:-www}
+      dockerfile: .deploy/dev.Dockerfile
+    image: ${USER:-www}/frontend
+    container_name: ${USER:-www}-frontend
+    environment:
+      PORT: ${FRONTEND_PORT:-3000}
+    ports:
+      - "3000:3000"
     restart: unless-stopped
     networks:
       - service

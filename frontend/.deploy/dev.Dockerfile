@@ -6,7 +6,8 @@ WORKDIR /app
 # Install app dependencies
 COPY package*.json ./
 RUN apk add npm
-RUN npm install
+RUN npm install -g npm
+RUN npm install --force
 
 # Copy app source code
 COPY . .
@@ -15,4 +16,4 @@ COPY . .
 EXPOSE 3000
 
 # Start app
-CMD [ "npm", "run", "start" ]
+CMD [ "npm", "run", "serve" ]
