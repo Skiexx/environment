@@ -22,6 +22,7 @@ services:
     depends_on:
       - backend
       - adminer
+      - frontend
     volumes:
       - ./backend/laravel/public:/var/www/public
 #    environment:
@@ -70,13 +71,17 @@ services:
     networks:
       - service
 
-#  frontend:
-#    build:
-#      context: ./frontend
-#      dockerfile: .deploy/Dockerfile
-##      args:
-#    container_name: ${USER:-www}
-#    restart: unless-stopped
-#    networks:
-#      - service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: .deploy/dev.Dockerfile
+      args:
+        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+    image: ${USER:-www}/frontend
+    container_name: ${USER:-www}-frontend
+    environment:
+      PORT: ${FRONTEND_PORT:-3000}
+    restart: unless-stopped
+    networks:
+      - service
 
