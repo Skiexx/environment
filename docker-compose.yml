@@ -13,13 +13,18 @@ services:
     build:
       context: ./nginx
       dockerfile: .deploy/Dockerfile
-#      args:
+      args:
+        NGINX_SERVER: ${NGINX_SERVER:-localhost}
+        BACKEND_PORT: ${BACKEND_PORT:-9000}
+        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
     container_name: ${USER:-www}-nginx
     image: ${USER:-www}/nginx
     depends_on:
       - backend
-      - frontend
       - adminer
+      - frontend
+    volumes:
+      - ./backend/laravel/public:/var/www/public
 #    environment:
     ports:
       - "80:80"
@@ -36,6 +41,8 @@ services:
     depends_on:
       - db
 #    environment:
+    volumes:
+      - ./backend/laravel:/var/www
     networks:
       - service
 
@@ -74,8 +81,6 @@ services:
     container_name: ${USER:-www}-frontend
     environment:
       PORT: ${FRONTEND_PORT:-3000}
-    ports:
-      - "3000:3000"
     restart: unless-stopped
     networks:
       - service
