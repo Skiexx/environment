@@ -5,7 +5,7 @@ WORKDIR /var/www
 #install packages
 RUN apk update && apk add \
     build-base \
-    vim \
+    nano \
     bash \
     curl
 
@@ -16,24 +16,23 @@ RUN curl -sSLf \
 RUN chmod +x /usr/local/bin/install-php-extensions
 RUN install-php-extensions \
             pdo \
-            pdo_pgsql \
-            xdebug
+            pdo_pgsql
 
 #install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Add ini-files
 COPY ./.deploy/php.ini /usr/local/etc/php/conf.d/40-custom.ini
-COPY ./.deploy/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
-# Replace env variables in xdebug.ini
-RUN sed -i 's#{{DOCKER_HOST_IP}}#'$DOCKER_HOST_IP'#g' /usr/local/etc/php/conf.d/xdebug.ini
 
 # Run composer install
 #RUN composer install - закоменченно, так как пока нет laravel проекта
 
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
+
+COPY laravel /var/www
+RUN composer update
 
 # Create a non-root user
 RUN addgroup -g 1000 -S www && \

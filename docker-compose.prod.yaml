@@ -1,0 +1,73 @@
+version: '3'
+
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  service:
+    driver: bridge
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: .deploy/prod.Dockerfile
+      args:
+        NGINX_SERVER: ${NGINX_SERVER:-localhost}
+        BACKEND_PORT: ${BACKEND_PORT:-9000}
+        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+    container_name: ${USER:-www}-nginx
+    image: ${USER:-www}/nginx
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./backend/laravel/public:/var/www/public
+    ports:
+      - "80:80"
+    networks:
+      - service
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: .deploy/prod.Dockerfile
+      args:
+        BACKEND_PORT: ${BACKEND_PORT:-9000}
+    container_name: ${USER:-www}-php
+    image: ${USER:-www}/php
+    depends_on:
+      - db
+    volumes:
+      - ./backend/laravel:/var/www
+    networks:
+      - service
+
+  db:
+    image: postgres:15-alpine3.17
+    container_name: ${USER:-www}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-laravel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-QWEasd123@}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+    volumes:
+      - dbdata:/var/lib/postgres
+    networks:
+      - service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: .deploy/prod.Dockerfile
+      args:
+        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+    image: ${USER:-www}/frontend
+    container_name: ${USER:-www}-frontend
+    environment:
+      PORT: ${FRONTEND_PORT:-3000}
+    restart: unless-stopped
+    networks:
+      - service
+
