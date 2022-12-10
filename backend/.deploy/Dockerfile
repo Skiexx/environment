@@ -1,6 +1,7 @@
 FROM php:8.1-fpm-alpine
+ARG USER
 
-WORKDIR /var/www
+WORKDIR /app
 
 #install packages
 RUN apk update && apk add \
@@ -29,18 +30,19 @@ COPY ./.deploy/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 # Replace env variables in xdebug.ini
 RUN sed -i 's#{{DOCKER_HOST_IP}}#'$DOCKER_HOST_IP'#g' /usr/local/etc/php/conf.d/xdebug.ini
 
-# Run composer install
-#RUN composer install - закоменченно, так как пока нет laravel проекта
-
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
 
+COPY --chown=$USER:$USER ./laravel /app
+
 # Create a non-root user
-RUN addgroup -g 1000 -S www && \
-    adduser -u 1000 -S www -G www
+RUN addgroup -g 1000 -S $USER && \
+    adduser -u 1000 -S $USER -G $USER
 
 # Change current user to non-root user
-USER www
-ARG BACKEND_PORT
+USER $USER
 
+# Expose port and start php-fpm server
+ARG BACKEND_PORT
 EXPOSE $BACKEND_PORT
+CMD ["php-fpm"]

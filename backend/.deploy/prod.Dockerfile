@@ -1,6 +1,8 @@
 FROM php:8.1-fpm-alpine
 
-WORKDIR /var/www
+ARG USER
+
+WORKDIR /app
 
 #install packages
 RUN apk update && apk add \
@@ -31,15 +33,17 @@ COPY ./.deploy/php.ini /usr/local/etc/php/conf.d/40-custom.ini
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
 
-COPY laravel /var/www
+COPY laravel /app
 RUN composer update
 
 # Create a non-root user
-RUN addgroup -g 1000 -S www && \
-    adduser -u 1000 -S www -G www
+RUN addgroup -g 1000 -S $USER && \
+    adduser -u 1000 -S $USER -G $USER
 
 # Change current user to non-root user
-USER www
-ARG BACKEND_PORT
+USER $USER
 
+# Expose port 9000 and start php-fpm server
+ARG BACKEND_PORT
 EXPOSE $BACKEND_PORT
+CMD ["php-fpm"]
