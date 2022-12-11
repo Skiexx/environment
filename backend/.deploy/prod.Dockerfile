@@ -6,7 +6,7 @@ WORKDIR /app
 #install packages
 RUN apk update && apk add \
     build-base \
-    vim \
+    nano \
     bash \
     curl
 
@@ -17,18 +17,13 @@ RUN curl -sSLf \
 RUN chmod +x /usr/local/bin/install-php-extensions
 RUN install-php-extensions \
             pdo \
-            pdo_pgsql \
-            xdebug
+            pdo_pgsql
 
 #install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Add ini-files
 COPY ./.deploy/php.ini /usr/local/etc/php/conf.d/40-custom.ini
-COPY ./.deploy/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
-
-# Replace env variables in xdebug.ini
-RUN sed -i 's#{{DOCKER_HOST_IP}}#'$DOCKER_HOST_IP'#g' /usr/local/etc/php/conf.d/xdebug.ini
 
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
@@ -38,7 +33,7 @@ RUN addgroup -g 1000 -S $USER && \
     adduser -u 1000 -S $USER -G $USER
 
 # Copy laravel and run composer install
-COPY --chown=$USER:$USER ./laravel /app
+COPY --chown=$USER:$USER laravel /app
 RUN composer install
 
 # Change current user to non-root user

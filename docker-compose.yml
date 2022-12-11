@@ -9,25 +9,24 @@ networks:
     driver: bridge
 
 services:
-  nginx:
+  proxy:
     build:
-      context: ./nginx
+      context: ./proxy
       dockerfile: .deploy/Dockerfile
-      args:
-        NGINX_SERVER: ${NGINX_SERVER:-localhost}
-        BACKEND_PORT: ${BACKEND_PORT:-9000}
-        FRONTEND_PORT: ${FRONTEND_PORT:-3000}
-    container_name: ${USER:-www}-nginx
-    image: ${USER:-www}/nginx
+    container_name: ${USER:-www}-proxy-dev
+    image: ${USER:-www}/proxy-dev
+    environment:
+      NGINX_SERVER: ${NGINX_SERVER:-localhost}
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
     depends_on:
-      - backend
+      - backend-api
       - adminer
       - frontend
     volumes:
-      - ./backend/laravel/public:/var/www/public
-#    environment:
+      - ./backend/laravel:/app
+      - ./proxy/default.conf:/etc/nginx/templates/default.conf.template
     ports:
-      - "80:80"
+      - "${NGINX_PORT:-80}:80"
     networks:
       - service
 
@@ -35,20 +34,37 @@ services:
     build:
       context: ./backend
       dockerfile: .deploy/Dockerfile
-#      args:
-    container_name: ${USER:-www}-php
-    image: ${USER:-www}/php
+      args:
+        USER: ${USER:-www}
+    container_name: ${USER:-www}-backend-dev
+    image: ${USER:-www}/backend-dev
     depends_on:
       - db
-#    environment:
     volumes:
-      - ./backend/laravel:/var/www
+      - ./backend/laravel:/app
+    networks:
+      - service
+
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: .deploy/nginx/Dockerfile
+    image: ${USER:-www}/backend-api-dev
+    container_name: ${USER:-www}-backend-api-dev
+    volumes:
+      - ./backend/laravel:/app
+      - ./backend/.deploy/nginx/conf.d/default.conf:/etc/nginx/templates/default.conf.template
+      #- ./backend/nginx.logs/access.log:/var/log/nginx/access.log
+      #- ./backend/nginx.logs/error.log:/var/log/nginx/error.log
+    depends_on:
+      - backend
+    restart: unless-stopped
     networks:
       - service
 
   db:
     image: postgres:15-alpine3.17
-    container_name: ${USER:-www}-db
+    container_name: ${USER:-www}-db-dev
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-laravel}
@@ -67,7 +83,7 @@ services:
   adminer:
     image: adminer
     restart: unless-stopped
-    container_name: ${USER:-www}
+    container_name: ${USER:-www}-adminer-dev
     networks:
       - service
 
@@ -77,11 +93,10 @@ services:
       dockerfile: .deploy/dev.Dockerfile
       args:
         FRONTEND_PORT: ${FRONTEND_PORT:-3000}
-    image: ${USER:-www}/frontend
-    container_name: ${USER:-www}-frontend
+    image: ${USER:-www}/frontend-dev
+    container_name: ${USER:-www}-frontend-dev
     environment:
       PORT: ${FRONTEND_PORT:-3000}
     restart: unless-stopped
     networks:
       - service
-

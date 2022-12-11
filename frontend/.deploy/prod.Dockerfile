@@ -6,7 +6,7 @@ WORKDIR /app
 # Install app dependencies
 COPY package*.json ./
 RUN apk add npm
-RUN npm ci --only=production
+RUN npm install --force
 
 # Copy app source code
 COPY . .
@@ -14,18 +14,17 @@ COPY . .
 # Build app
 RUN npm run build
 
-FROM nginx:1.19-alpine
+FROM nginx:1.23-alpine as production-stage
+COPY .deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Install app dependencies
-RUN apk add npm
+# Remove default nginx website
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy app source code
-COPY --from=build-stage /app/build/ /usr/share/app/html
-WORKDIR /usr/share/app/html
+# Copy build files
+COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Expose port 3000
-ARG FRONTEND_PORT
-EXPOSE $FRONTEND_PORT
+# Expose port 80
+EXPOSE 80
 
 # Start app
-CMD [ "npm" , "run" , "serve" ]
+CMD [ "nginx", "-g", "daemon off;" ]
