@@ -33,11 +33,13 @@ RUN sed -i 's#{{DOCKER_HOST_IP}}#'$DOCKER_HOST_IP'#g' /usr/local/etc/php/conf.d/
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
 
-COPY --chown=$USER:$USER ./laravel /app
-
 # Create a non-root user
 RUN addgroup -g 1000 -S $USER && \
     adduser -u 1000 -S $USER -G $USER
+
+# Copy laravel and run composer install
+COPY --chown=$USER:$USER ./laravel /app
+RUN composer install
 
 # Change current user to non-root user
 USER $USER

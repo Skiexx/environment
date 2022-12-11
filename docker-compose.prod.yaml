@@ -42,7 +42,10 @@ services:
       - service
 
   backend-api:
-    image: nginx:1.23-alpine
+    build:
+      context: ./backend
+      dockerfile: .deploy/nginx/Dockerfile
+    image: ${USER:-www}/backend-api
     container_name: ${USER:-www}-backend-api
     volumes:
       - ./backend/.deploy/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf

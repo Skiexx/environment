@@ -1,5 +1,4 @@
 FROM php:8.1-fpm-alpine
-
 ARG USER
 
 WORKDIR /app
@@ -26,24 +25,21 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Add ini-files
 COPY ./.deploy/php.ini /usr/local/etc/php/conf.d/40-custom.ini
 
-
-# Run composer install
-#RUN composer install - закоменченно, так как пока нет laravel проекта
-
 # Clean
 RUN rm -rf /var/cache/apk/* && docker-php-source delete
-
-COPY laravel /app
-RUN composer update
 
 # Create a non-root user
 RUN addgroup -g 1000 -S $USER && \
     adduser -u 1000 -S $USER -G $USER
 
+# Copy laravel and run composer install
+COPY --chown=$USER:$USER laravel /app
+RUN composer install
+
 # Change current user to non-root user
 USER $USER
 
-# Expose port 9000 and start php-fpm server
+# Expose port and start php-fpm server
 ARG BACKEND_PORT
 EXPOSE $BACKEND_PORT
 CMD ["php-fpm"]
